@@ -1,0 +1,203 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas></canvas>
+
+    <script type="module">
+      import { Canvas, Rect, Text } from "./dist/index.js";
+      import { loop, KeyboardControls, MouseControls } from "./dist/index.js";
+
+      const config = {
+        screen: {
+          width: 640,
+          height: 480,
+        },
+        score: {
+          playerOne: 0,
+          playerTwo: 0,
+        },
+        ballSpeed: {
+          x: 4,
+          y: 4,
+        },
+        paddleSpeed: 4,
+        paddleHeight: 64,
+      };
+
+      const canvas = new Canvas({
+        root: document.querySelector("canvas"),
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      const bg = new Rect({
+        color: "#000",
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      const divider = new Rect({
+        color: "#fff",
+        width: 4,
+        height: config.screen.height,
+        x: config.screen.width / 2 - 2,
+      });
+
+      const ball = new Rect({
+        color: "#0a0",
+        x: config.screen.width / 2 - 5,
+        y: config.screen.height / 2 - 5,
+        width: 10,
+        height: 10,
+      });
+
+      const playerOne = new Rect({
+        color: "#fff",
+        x: 0,
+        y: config.screen.height / 2 - config.paddleHeight / 2,
+        width: 10,
+        height: config.paddleHeight,
+      });
+
+      const playerTwo = new Rect({
+        color: "#fff",
+        x: config.screen.width - 10,
+        y: config.screen.height / 2 - config.paddleHeight / 2,
+        width: 10,
+        height: config.paddleHeight,
+      });
+
+      const playerOneScore = new Text({
+        text: config.score.playerOne.toString(),
+        color: "#fff",
+        x: config.screen.width / 4,
+        y: 25,
+      });
+
+      const playerTwoScore = new Text({
+        text: config.score.playerTwo.toString(),
+        color: "#fff",
+        x: (config.screen.width / 4) * 3,
+        y: 25,
+      });
+
+      canvas
+        .add(bg)
+        .add(divider)
+        .add(ball)
+        .add(playerOne)
+        .add(playerTwo)
+        .add(playerOneScore)
+        .add(playerTwoScore);
+
+      const controls = new KeyboardControls([
+        [
+          "ArrowUp",
+          () => {
+            if (playerTwo.intersectsWithCanvas(canvas, "top")) {
+              playerTwo.y = canvas.top;
+              return;
+            }
+
+            playerTwo.y -= config.paddleSpeed;
+          },
+        ],
+        [
+          "ArrowDown",
+          () => {
+            if (playerTwo.intersectsWithCanvas(canvas, "bottom")) {
+              playerTwo.y = canvas.bottom - playerTwo.height;
+              return;
+            }
+
+            playerTwo.y += config.paddleSpeed;
+          },
+        ],
+        [
+          "w",
+          () => {
+            if (playerOne.intersectsWithCanvas(canvas, "top")) {
+              playerOne.y = canvas.top;
+              return;
+            }
+
+            playerOne.y -= config.paddleSpeed;
+          },
+        ],
+        [
+          "s",
+          () => {
+            if (playerOne.intersectsWithCanvas(canvas, "bottom")) {
+              playerOne.y = canvas.bottom - playerOne.height;
+              return;
+            }
+
+            playerOne.y += config.paddleSpeed;
+          },
+        ],
+      ]);
+
+      canvas.render();
+
+      let gameFinished = false;
+
+      loop(() => {
+        canvas.render();
+
+        if (config.score.playerOne === 10 || config.score.playerTwo === 10) {
+          gameFinished = true;
+          alert("Game Over");
+        }
+
+        if (gameFinished) {
+          return;
+        }
+
+        controls.process();
+
+        if (ball.intersectsWith(playerOne) || ball.intersectsWith(playerTwo)) {
+          config.ballSpeed.x = -config.ballSpeed.x;
+        }
+
+        if (ball.top <= canvas.top || ball.bottom >= canvas.bottom) {
+          config.ballSpeed.y = -config.ballSpeed.y;
+        }
+
+        // let ball hit left and right walls for testing
+        // if (ball.left <= canvas.left || ball.right >= canvas.right) {
+        //   config.ballSpeed.x = -config.ballSpeed.x;
+        // }
+
+        if (ball.intersectsWithCanvas(canvas, "left")) {
+          config.score.playerTwo += 1;
+          playerTwoScore.text = config.score.playerTwo.toString();
+          ball.x = config.screen.width / 2 - 5;
+          ball.y = config.screen.height / 2 - 5;
+        }
+
+        if (ball.intersectsWithCanvas(canvas, "right")) {
+          config.score.playerOne += 1;
+          playerOneScore.text = config.score.playerOne.toString();
+          ball.x = config.screen.width / 2 - 5;
+          ball.y = config.screen.height / 2 - 5;
+        }
+
+        ball.x += config.ballSpeed.x;
+        ball.y += config.ballSpeed.y;
+      });
+    </script>
+  </body>
+</html>

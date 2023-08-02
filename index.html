@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas></canvas>
+
+    <!-- <script src="./dist/index.js"></script> -->
+
+    <script type="module">
+      import { Canvas, Rect } from "./dist/index.js";
+      import { loop, KeyboardControls, MouseControls } from "./dist/index.js";
+
+      const config = {
+        screen: {
+          width: 640,
+          height: 480,
+        },
+        ballSpeed: 4,
+      };
+
+      const canvas = new Canvas({
+        root: document.querySelector("canvas"),
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      // window.addEventListener("resize", (e) => {
+      //   const { innerWidth: width, innerHeight: height } = window;
+
+      //   canvas.resize({
+      //     width,
+      //     height,
+      //   });
+      // });
+
+      const bg = new Rect({
+        color: "#000",
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      const divider = new Rect({
+        color: "#fff",
+        width: 4,
+        height: config.screen.height,
+        x: config.screen.width / 2 - 2,
+      });
+
+      const box = new Rect({
+        color: "#0a0",
+        x: 10,
+        y: 10,
+        width: 10,
+        height: 10,
+      });
+
+      const box2 = new Rect({
+        color: "#00a",
+        x: 100,
+        y: 200,
+        width: 50,
+        height: 50,
+      });
+
+      canvas.add(bg).add(divider).add(box).add(box2);
+
+      const mouse = new MouseControls(canvas.canvasNode, {
+        handleClick: (e) => {
+          console.log(e);
+        },
+        handleMove: (e) => {
+          console.log(e);
+        },
+      });
+
+      const controls = new KeyboardControls([
+        [
+          "ArrowUp",
+          () => {
+            if (box.top <= canvas.top) {
+              box.y = canvas.top;
+              return;
+            }
+            box.y -= config.ballSpeed;
+          },
+        ],
+        [
+          "ArrowDown",
+          () => {
+            if (box.bottom >= canvas.bottom) {
+              box.y = canvas.bottom - box.height;
+              return;
+            }
+            box.y += config.ballSpeed;
+          },
+        ],
+        [
+          "ArrowLeft",
+          () => {
+            if (box.left <= canvas.left) {
+              box.x = canvas.left;
+              return;
+            }
+            box.x -= config.ballSpeed;
+          },
+        ],
+        [
+          "ArrowRight",
+          () => {
+            if (box.right >= canvas.right) {
+              box.x = canvas.right - box.width;
+              return;
+            }
+            box.x += config.ballSpeed;
+          },
+        ],
+      ]);
+
+      canvas.render();
+
+      loop(() => {
+        box.angle += 3;
+        if (box.intersectsWith(divider)) {
+          divider.color = "#f00";
+        } else {
+          divider.color = "#fff";
+        }
+
+        if (box.intersectsWith(box2)) {
+          box2.color = "#f00";
+        } else {
+          box2.color = "#00a";
+        }
+
+        controls.process();
+        canvas.render();
+      });
+    </script>
+  </body>
+</html>

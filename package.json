@@ -1,0 +1,19 @@
+{
+  "name": "canvas-lib",
+  "version": "1.0.0",
+  "main": "index.js",
+  "type": "module",
+  "license": "MIT",
+  "scripts": {
+    "tsc": "tsc",
+    "build": "tsc",
+    "watch": "tsc -w",
+    "start": "concurrently \"yarn watch\" \"serve . -p 8083\""
+  },
+  "devDependencies": {
+    "typescript": "^5.1.6"
+  },
+  "dependencies": {
+    "concurrently": "^8.2.0"
+  }
+}
