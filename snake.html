@@ -1,0 +1,293 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Snake!</title>
+    <style>
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <canvas></canvas>
+
+    <script type="module">
+      import { Canvas, Rect, Text } from "./dist/index.js";
+      import { loop, KeyboardControls, MouseControls } from "./dist/index.js";
+
+      const config = {
+        screen: {
+          width: 660,
+          height: 500,
+        },
+        gameBounds: {
+          width: 400,
+          height: 400,
+        },
+        score: 0,
+        speed: 10,
+        rateLimit: 8,
+        frame: -1,
+        gameFinished: false,
+        playerDirection: "right",
+      };
+
+      const getRelativeGameBounds = () => {
+        const x = (config.screen.width - config.gameBounds.width) / 2;
+        const y = (config.screen.height - config.gameBounds.height) / 2;
+        const bottom = y + config.gameBounds.height;
+        const right = x + config.gameBounds.width;
+
+        return {
+          x,
+          y,
+          bottom,
+          right,
+        };
+      };
+
+      const relativeGameBounds = getRelativeGameBounds();
+
+      //   https://stackoverflow.com/questions/1527803/generating-random-whole-numbers-in-javascript-in-a-specific-range
+      function getRandomArbitrary(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      // https://stackoverflow.com/questions/11022488/javascript-using-round-to-the-nearest-10
+      function round(num, pre) {
+        if (!pre) pre = 0;
+        var pow = Math.pow(10, pre);
+        return Math.round(num * pow) / pow;
+      }
+
+      const canvas = new Canvas({
+        root: document.querySelector("canvas"),
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      const bg = new Rect({
+        color: "#000",
+        width: config.screen.width,
+        height: config.screen.height,
+      });
+
+      const borderSize = 4;
+
+      //   const gameBackgroundX = (config.gameBounds.width - borderSize) / 2;
+      //   const gameBackgroundY = (config.gameBounds.height - borderSize) / 2;
+
+      const border = new Rect({
+        color: "#fff",
+        x: relativeGameBounds.x - borderSize / 2,
+        y: relativeGameBounds.y - borderSize / 2,
+        width: config.gameBounds.width + borderSize,
+        height: config.gameBounds.height + borderSize,
+        border: "1px solid #fff",
+      });
+
+      const gameBackground = new Rect({
+        color: "#000",
+        x: relativeGameBounds.x,
+        y: relativeGameBounds.y,
+        width: config.gameBounds.width,
+        height: config.gameBounds.height,
+      });
+
+      const playerOne = new Rect({
+        color: "#fff",
+        x: relativeGameBounds.x + 50,
+        y: relativeGameBounds.y + 50,
+        width: 10,
+        height: 10,
+      });
+
+      const playerOneScore = new Text({
+        text: config.score.toString(),
+        color: "#fff",
+        x: config.screen.width / 2,
+        y: 25,
+      });
+
+      const food = new Rect({
+        color: "#f00",
+        x: relativeGameBounds.x + 100,
+        y: relativeGameBounds.y + 100,
+        width: 10,
+        height: 10,
+      });
+
+      canvas
+        .add(bg)
+        .add(border)
+        .add(gameBackground)
+        .add(playerOne)
+        .add(playerOneScore)
+        .add(food);
+
+      const controls = new KeyboardControls([
+        [
+          "ArrowUp",
+          () => {
+            if (config.playerDirection === "down") return;
+            config.playerDirection = "up";
+          },
+        ],
+        [
+          "ArrowDown",
+          () => {
+            if (config.playerDirection === "up") return;
+            config.playerDirection = "down";
+          },
+        ],
+        [
+          "ArrowLeft",
+          () => {
+            if (config.playerDirection === "right") return;
+            config.playerDirection = "left";
+          },
+        ],
+        [
+          "ArrowRight",
+          () => {
+            if (config.playerDirection === "left") return;
+            config.playerDirection = "right";
+          },
+        ],
+      ]);
+
+      let snake = [playerOne];
+
+      function moveTailToHead() {
+        const head = snake[0];
+        const tail = snake.pop();
+
+        tail.x = head.x;
+        tail.y = head.y;
+
+        snake = [tail, ...(snake || [])];
+      }
+
+      function handlePlayerMovement() {
+        moveTailToHead();
+
+        const head = snake[0];
+
+        switch (config.playerDirection) {
+          case "up":
+            head.y -= config.speed;
+            break;
+          case "down":
+            head.y += config.speed;
+            break;
+          case "left":
+            head.x -= config.speed;
+            break;
+          case "right":
+            head.x += config.speed;
+            break;
+        }
+      }
+
+      function safeHandleBounds() {
+        const head = snake[0];
+
+        if (head.x < relativeGameBounds.x) {
+          head.x = relativeGameBounds.right - 10;
+        }
+
+        if (head.x > relativeGameBounds.right - 10) {
+          head.x = relativeGameBounds.x;
+        }
+
+        if (head.y < relativeGameBounds.y) {
+          head.y = relativeGameBounds.bottom - 10;
+        }
+
+        if (head.y > relativeGameBounds.bottom - 10) {
+          head.y = relativeGameBounds.y;
+        }
+      }
+
+      function handleFoodCollision() {
+        const head = snake[0];
+
+        if (head.intersectsWith(food)) {
+          config.score += 1;
+          playerOneScore.text = config.score.toString();
+
+          const previousFoodX = food.x;
+          const previousFoodY = food.y;
+
+          const randomX = getRandomArbitrary(
+            relativeGameBounds.x,
+            relativeGameBounds.right - 10
+          );
+
+          const randomY = getRandomArbitrary(
+            relativeGameBounds.y,
+            relativeGameBounds.bottom - 10
+          );
+
+          food.x = Math.floor(randomX / 10) * 10;
+          food.y = Math.floor(randomY / 10) * 10;
+
+          console.log(food);
+
+          const newPart = new Rect({
+            color: "#fff",
+            x: previousFoodX,
+            y: previousFoodY,
+            width: 10,
+            height: 10,
+          });
+
+          snake.unshift(newPart);
+          canvas.add(newPart);
+        }
+      }
+
+      function handleFrame() {
+        config.frame = (config.frame + 1) % config.rateLimit;
+      }
+
+      canvas.render();
+
+      loop(() => {
+        canvas.render();
+
+        if (config.gameFinished) {
+          alert(`Game over! Final score: ${config.score} `);
+          return;
+        }
+
+        controls.process();
+
+        handleFrame();
+        if (config.frame !== 0) {
+          return;
+        }
+
+        handlePlayerMovement();
+        handleFoodCollision();
+
+        // debug
+        safeHandleBounds();
+
+        // if (
+        //   ["top", "bottom", "left", "right"].some((dir) =>
+        //     playerOne.intersectsWithCanvas(canvas, dir)
+        //   )
+        // ) {
+        //   config.gameFinished = true;
+        //   return;
+        // }
+      });
+    </script>
+  </body>
+</html>
