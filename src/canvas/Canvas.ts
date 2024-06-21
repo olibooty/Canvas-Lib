@@ -37,6 +37,10 @@ export class Canvas {
     this.responsive = props.responsive || false;
 
     this.resize({ width: this.width, height: this.height });
+
+    if (window) {
+      window.__$canvas = this;
+    }
   }
 
   resize({ width, height }: Pick<CanvasProps, "width" | "height">) {
