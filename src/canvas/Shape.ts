@@ -1,13 +1,14 @@
 interface IShape {
   render(ctx: CanvasRenderingContext2D): void;
+  intersectsWith?(shape: Shape): boolean;
 }
 
-export class Shape implements IShape {
-  render(ctx: CanvasRenderingContext2D) {
+export abstract class Shape implements IShape {
+  render(ctx: CanvasRenderingContext2D): void {
     throw new Error("Method not implemented.");
   }
 
-  intersectsWith(shape: Shape) {
+  intersectsWith(shape: Shape): boolean {
     throw new Error("Method not implemented.");
   }
 }
