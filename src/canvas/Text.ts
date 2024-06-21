@@ -18,8 +18,6 @@ export class Text extends Shape {
   constructor(props: TextProps) {
     super();
 
-    console.log("Text props", props);
-
     if (props.color) {
       this.color = props.color;
     }
@@ -35,8 +33,6 @@ export class Text extends Shape {
     if (props.y) {
       this.y = props.y;
     }
-
-    console.log("Text props", this);
   }
 
   render(ctx: CanvasRenderingContext2D) {

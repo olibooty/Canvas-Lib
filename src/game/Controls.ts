@@ -11,7 +11,6 @@ export class KeyboardControls {
     this.keysPressed = new Set();
 
     this.keyDownHandler = (event) => {
-      console.log(event.key);
       this.keysPressed.add(event.key);
     };
     this.keyUpHandler = (event) => {
